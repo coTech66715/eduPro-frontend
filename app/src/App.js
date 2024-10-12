@@ -4,6 +4,7 @@ import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import AdminDashboard from './pages/admin/dashboard';
 import UserDashboard from './pages/client/dashboard';
+import NewAssignment from './pages/client/NewAssignment';
 
 function App() {
   return (
@@ -14,10 +15,11 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path='/admin-dashboard' element={<AdminDashboard />} />
         <Route path='/user-dashboard' element={<UserDashboard />} />
-        
+        <Route path='/new-assignment' element={<NewAssignment /> }/>
       </Routes>
     </Router>
   );
 }
 
 export default App;
+
