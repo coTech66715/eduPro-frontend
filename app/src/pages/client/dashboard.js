@@ -34,6 +34,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddIcon from '@mui/icons-material/Add';
+import ExitToApp from '@mui/icons-material/ExitToApp'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 
@@ -99,6 +100,11 @@ const SideDrawer = styled(Drawer)(({ theme }) => ({
     borderRight: `1px solid ${theme.palette.divider}`,
   },
 }));
+
+const handleLogout = () => {
+  // Implement logout functionality here
+  console.log('Logout clicked');
+};
 
 const UserDashboard = () => {
   const theme = useTheme();
