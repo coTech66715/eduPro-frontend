@@ -5,6 +5,7 @@ import Signup from './pages/auth/Signup';
 import AdminDashboard from './pages/admin/dashboard';
 import UserDashboard from './pages/client/dashboard';
 import NewAssignment from './pages/client/NewAssignment';
+import AllAssignments from './pages/client/AllAssignments';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path='/admin-dashboard' element={<AdminDashboard />} />
         <Route path='/user-dashboard' element={<UserDashboard />} />
         <Route path='/new-assignment' element={<NewAssignment /> }/>
+        <Route path='/assignments' element={<AllAssignments /> } />
       </Routes>
     </Router>
   );

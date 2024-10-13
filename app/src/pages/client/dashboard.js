@@ -9,7 +9,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
   Drawer,
   IconButton,
   Badge,
@@ -28,17 +27,22 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddIcon from '@mui/icons-material/Add';
-import ExitToApp from '@mui/icons-material/ExitToApp'
+import LogoutIcon from '@mui/icons-material/Logout';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const drawerWidth = 240;
+
+const Root = styled('div')({
+  display: 'flex',
+});
 
 const MainContent = styled('div')(({ theme }) => ({
   flexGrow: 1,
@@ -48,9 +52,6 @@ const MainContent = styled('div')(({ theme }) => ({
     duration: theme.transitions.duration.leavingScreen,
   }),
   marginLeft: 0,
-  [theme.breakpoints.up('md')]: {
-    marginLeft: drawerWidth,
-  },
 }));
 
 const TopBar = styled(Box)(({ theme }) => ({
@@ -98,56 +99,67 @@ const SideDrawer = styled(Drawer)(({ theme }) => ({
     boxSizing: 'border-box',
     backgroundColor: theme.palette.background.default,
     borderRight: `1px solid ${theme.palette.divider}`,
+    display: 'flex',
+    flexDirection: 'column',
   },
 }));
 
-const handleLogout = () => {
-  // Implement logout functionality here
-  console.log('Logout clicked');
-};
+const LogoutButton = styled(Button)(({ theme }) => ({
+  marginTop: 'auto',
+  marginBottom: theme.spacing(2),
+  marginLeft: theme.spacing(2),
+  marginRight: theme.spacing(2),
+}));
 
 const UserDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Mock user data - replace with actual user data
+  // Mock user data
   const user = {
     name: "John Doe",
-    email: "johndoe@example.com",
-    avatar: "/api/placeholder/100/100",
-    university: "University of Ghana",
     program: "Computer Science",
-    level: "300",
-    accountBalance: 50.00,
-    overallProgress: 65,
+    level: 3,
+    avatar: "https://example.com/avatar.jpg",
+    overallProgress: 75,
+    solvedAssignments: 42,
+    accountBalance: "$1,200"
   };
 
-  // Mock assignments data - replace with actual data
-  const assignments = [
-    { id: 1, title: 'Math Problem Set', course: 'MATH301', status: 'In Progress', dueDate: '2024-10-20', progress: 60 },
-    { id: 2, title: 'Programming Project', course: 'CS305', status: 'Completed', dueDate: '2024-10-15', progress: 100 },
-    { id: 3, title: 'Database Design', course: 'CS310', status: 'Pending', dueDate: '2024-10-25', progress: 0 },
-  ];
+  // Mock course completion and assignment success rate
+  const courseCompletion = 80;
+  const assignmentSuccessRate = 90;
 
-  // Mock course progress data for pie chart
+  // Mock course progress data
   const courseProgress = [
-    { name: 'Completed', value: 5 },
-    { name: 'In Progress', value: 3 },
-    { name: 'Not Started', value: 2 },
+    { name: 'Completed', value: 60 },
+    { name: 'In Progress', value: 30 },
+    { name: 'Not Started', value: 10 },
   ];
-  const COLORS = ['#00C49F', '#FFBB28', '#FF8042'];
 
-  // Mock data for new progress cards
-  const courseCompletion = 75;
-  const assignmentSuccessRate = 88;
+  // Mock assignments data
+  const assignments = [
+    { id: 1, title: "Data Structures Assignment", course: "CS201", status: "Completed", dueDate: "2024-10-20", progress: 100 },
+    { id: 2, title: "Machine Learning Project", course: "CS301", status: "In Progress", dueDate: "2024-11-05", progress: 60 },
+    { id: 3, title: "Database Design", course: "CS202", status: "Not Started", dueDate: "2024-11-15", progress: 0 },
+  ];
+
+  // Colors for the pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleLogout = () => {
+    // Add any logout logic here (e.g., clearing session, tokens, etc.)
+    navigate('/'); // Navigate to the home page
+  };
+
   const drawer = (
-    <div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Avatar src={user.avatar} sx={{ width: 60, height: 60, mr: 2 }} />
         <Box>
@@ -161,42 +173,58 @@ const UserDashboard = () => {
       </Box>
       <List>
         {[
-          { text: 'All Assignments', icon: <AssignmentIcon /> },
-          { text: 'My Courses', icon: <SchoolIcon /> },
-          { text: 'Academic Progress', icon: <TimelineIcon /> },
-          { text: 'Payment History', icon: <AccountBalanceWalletIcon /> },
+          { text: 'Dashboard', icon: <TimelineIcon />, path: '/user-dashboard' },
+          { text: 'All Assignments', icon: <AssignmentIcon />, path: '/assignments' },
+          { text: 'Payment History', icon: <AccountBalanceWalletIcon />, path: '/payments' },
         ].map((item, index) => (
-          <ListItem button key={item.text}>
+          <ListItem button key={item.text} onClick={() => navigate(item.path)}>
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
       </List>
+      <LogoutButton
+        variant="contained"
+        color="primary"
+        startIcon={<LogoutIcon />}
+        onClick={handleLogout}
+      >
+        Logout
+      </LogoutButton>
     </div>
   );
 
   return (
-    <Box>
+    <Root>
       <SideDrawer
         variant={isMobile ? 'temporary' : 'permanent'}
         open={isMobile ? mobileOpen : true}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
+          keepMounted: true,
         }}
       >
         {drawer}
-      </SideDrawer>  
+      </SideDrawer>
       <MainContent>
-        {/* Top Bar */}
         <TopBar>
           <Box display="flex" alignItems="center">
-            <Avatar src={user.avatar} sx={{ width: 60, height: 60, mr: 2 }} />
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2, display: { md: 'none' } }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+              <Typography variant="h4" color='blue' sx={{ fontWeight: 'bold' }}>
                 Welcome, {user.name}!
               </Typography>
-              <Typography variant="subtitle1" color="textSecondary">
+              <Typography variant="subtitle1" color="blue">
                 {user.program} - Level {user.level}
               </Typography>
             </Box>
@@ -207,7 +235,6 @@ const UserDashboard = () => {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            
             <Button
               component={Link}
               to="/new-assignment"
@@ -217,7 +244,6 @@ const UserDashboard = () => {
             >
               New Assignment
             </Button>
-            
           </Box>
         </TopBar>
 
@@ -249,13 +275,12 @@ const UserDashboard = () => {
                       Solved Assignments
                     </Typography>
                     <Typography variant="h5" component="div">
-                      {user.accountBalance}
+                      {user.solvedAssignments}
                     </Typography>
                   </CardContent>
                 </StyledCard>
               </Grid>
-              {/* New Course Completion Card */}
-              <Grid item xs={12} sm={6} >
+              <Grid item xs={12} sm={6}>
                 <StyledCard>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
@@ -272,7 +297,6 @@ const UserDashboard = () => {
                   </CardContent>
                 </StyledCard>
               </Grid>
-              {/* New Assignment Success Rate Card */}
               <Grid item xs={12} sm={6}>
                 <StyledCard>
                   <CardContent>
@@ -388,7 +412,7 @@ const UserDashboard = () => {
           </Grid>
         </Grid>
       </MainContent>
-    </Box>
+    </Root>
   );
 };
 
