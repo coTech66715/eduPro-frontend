@@ -9,24 +9,29 @@ import {
   Box,
   MenuItem,
   Divider,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Input = styled('input')({
   display: 'none',
 });
 
-const FilePreview = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(1),
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  backgroundColor: theme.palette.background.default,
+const FileList = styled(List)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
+  marginTop: theme.spacing(1),
+  maxHeight: '200px',
+  overflowY: 'auto',
 }));
 
 const NewAssignment = ({ user }) => {
@@ -38,11 +43,11 @@ const NewAssignment = ({ user }) => {
     programme: '',
     course: '',
     deadline: '',
-    file: null,
+    files: [],
     description: '',
   });
 
-  const [filePreview, setFilePreview] = useState(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -50,195 +55,197 @@ const NewAssignment = ({ user }) => {
   };
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    setFormData({ ...formData, file });
-    setFilePreview(URL.createObjectURL(file));
+    const newFiles = Array.from(event.target.files);
+    setFormData(prevData => ({
+      ...prevData,
+      files: [...prevData.files, ...newFiles]
+    }));
   };
 
-  const handleRemoveFile = () => {
-    setFormData({ ...formData, file: null });
-    setFilePreview(null);
+  const handleRemoveFile = (index) => {
+    setFormData(prevData => ({
+      ...prevData,
+      files: prevData.files.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log('Form submitted:', formData);
+    setOpenSnackbar(true);
     // Handle form submission logic here
   };
 
-  useEffect(() => {
-    return () => {
-      if (filePreview) {
-        URL.revokeObjectURL(filePreview);
-      }
-    };
-  }, [filePreview]);
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6 }}>
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          backgroundColor: 'white',
-          p: 4,
-          borderRadius: 2,
-          boxShadow: 'none',
-          border: '1px solid #e0e0e0',
-        }}
-      >
-        <Typography variant="h4" align="center" color='blue' gutterBottom>
+    <Container maxWidth="md">
+      <Paper elevation={3} sx={{ mt: 6, p: 4, borderRadius: 2 }}>
+        <Typography variant="h4" align="center" color="primary" gutterBottom>
           Submit a New Assignment
         </Typography>
-        <Divider sx={{ mb: 3 }} />
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-              variant="outlined"
-              placeholder="Enter your full name"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              variant="outlined"
-              placeholder="Enter your email"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Student ID"
-              name="studentId"
-              value={formData.studentId}
-              onChange={handleInputChange}
-              required
-              variant="outlined"
-              placeholder="Enter your student ID"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Phone Number"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="0269066715"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              select
-              fullWidth
-              label="Programme"
-              name="programme"
-              value={formData.programme}
-              onChange={handleInputChange}
-              required
-              variant="outlined"
-            >
-              <MenuItem value="Computer Science">Computer Science</MenuItem>
-              <MenuItem value="IT">IT</MenuItem>
-              {/* Add more options as needed */}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Course"
-              name="course"
-              value={formData.course}
-              onChange={handleInputChange}
-              required
-              variant="outlined"
-              placeholder="Enter course title"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Deadline"
-              name="deadline"
-              type="date"
-              value={formData.deadline}
-              onChange={handleInputChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              required
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Box display="flex" alignItems="center">
-              <label htmlFor="contained-button-file">
-                <Input
-                  accept="*/*"
-                  id="contained-button-file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                <Button
-                  variant="contained"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  sx={{ mr: 2 }}
-                >
-                  Upload File
-                </Button>
-              </label>
-              {filePreview && (
-                <FilePreview>
-                  <Typography>{formData.file?.name}</Typography>
-                  <IconButton onClick={handleRemoveFile} size="small">
-                    <CloseIcon />
-                  </IconButton>
-                </FilePreview>
-              )}
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Description"
-              name="description"
-              multiline
-              rows={4}
-              value={formData.description}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="Describe the assignment (optional)"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                sx={{ px: 5 }}
+        <Divider sx={{ mb: 4 }} />
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Student ID"
+                name="studentId"
+                value={formData.studentId}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                label="Programme"
+                name="programme"
+                value={formData.programme}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
               >
-                Submit Assignment
-              </Button>
-            </Box>
+                <MenuItem value="">Select a programme</MenuItem>
+                <MenuItem value="Computer Science">Computer Science</MenuItem>
+                <MenuItem value="IT">IT</MenuItem>
+                {/* Add more options as needed */}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Course"
+                name="course"
+                value={formData.course}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Deadline"
+                name="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={handleInputChange}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                required
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box>
+                <label htmlFor="contained-button-file">
+                  <Input
+                    accept="*/*"
+                    id="contained-button-file"
+                    multiple
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                  <Button
+                    variant="contained"
+                    component="span"
+                    startIcon={<CloudUploadIcon />}
+                  >
+                    Upload Files
+                  </Button>
+                </label>
+                {formData.files.length > 0 && (
+                  <FileList>
+                    {formData.files.map((file, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(2)} KB`} />
+                        <ListItemSecondaryAction>
+                          <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveFile(index)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </FileList>
+                )}
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                name="description"
+                multiline
+                rows={4}
+                value={formData.description}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  sx={{ minWidth: 200 }}
+                >
+                  Submit Assignment
+                </Button>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
+        </Box>
+      </Paper>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          Assignment submitted successfully!
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
