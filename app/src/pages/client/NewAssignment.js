@@ -52,6 +52,7 @@ const NewAssignment = ({ user }) => {
   });
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [isAuth, setIsAuth] = useState(false)
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -89,9 +90,19 @@ const NewAssignment = ({ user }) => {
   formData.files.forEach(file => data.append('files', file));
 
     try {
+      const token = localStorage.getItem('token')
+
+      if(!token) {
+        console.error('No auth token found');
+        setOpenSnackbar(true)
+        return
+      }
       const response = await fetch('http://localhost:8080/api/assignments/submit', {
         method: 'POST',
         body: data,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       const result = await response.json();
@@ -101,11 +112,23 @@ const NewAssignment = ({ user }) => {
         navigate(-1)
       }else {
         console.log('Error:', result);
+
+        if(response.status === 401) {
+          navigate('/')
+        }
       }
     } catch (error) {
       console.error('Error:', error);
+      setOpenSnackbar(true)
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
