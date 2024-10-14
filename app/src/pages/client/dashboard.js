@@ -160,6 +160,11 @@ const UserDashboard = () => {
 
   const fetchUserDetails = async () => {
     try {
+      const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
       const response = await fetch('http://localhost:8080/api/user/details', {
         method: 'GET',
         headers: {
@@ -178,8 +183,12 @@ const UserDashboard = () => {
       }))
     } catch (error) {
       console.error('Error fetching user details:', error);
+
+      
     }
   }
+
+  
 
   // Mock course completion and assignment success rate
   const courseCompletion = 80;
@@ -207,8 +216,19 @@ const UserDashboard = () => {
   };
 
   const handleLogout = () => {
-    // Add any logout logic here (e.g., clearing session, tokens, etc.)
-    navigate('/'); // Navigate to the home page
+    localStorage.removeItem('token')
+
+    fetch('http://localhost:8080/api/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+      }
+    }).then(() => {
+      navigate('/')
+    }).catch(error => {
+      console.error('Logout error:', error);
+      navigate('/')
+    })
   };
 
   const drawer = (
