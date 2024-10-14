@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
   Typography,
@@ -112,21 +112,74 @@ const LogoutButton = styled(Button)(({ theme }) => ({
 }));
 
 const UserDashboard = () => {
+  const [assign, setAssign] = useState([])
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate();
+  
 
-  // Mock user data
-  const user = {
-    name: "John Doe",
-    program: "Computer Science",
-    level: 3,
-    avatar: "https://example.com/avatar.jpg",
-    overallProgress: 75,
-    solvedAssignments: 42,
-    accountBalance: "$1,200"
-  };
+  
+  const [user, setUser] = useState({
+    name: "",
+    program: "",
+    level: "",
+    avatar: "",
+    overallProgress: 0,
+    solvedAssignments: 0,
+    accountBalance: 0
+  });
+
+
+  useEffect(() => {
+    fetchRecentAssignments();
+    fetchUserDetails()
+  }, [])
+
+  const fetchRecentAssignments = async() => {
+    setLoading(true)
+    try {
+      const response = await fetch('http://localhost:8080/api/assignments/recent', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if(!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json();
+      setAssign(data)
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchUserDetails = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/user/details', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if(!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setUser(prevUser => ({
+        ...prevUser,
+        name: data.name,
+        program: data.program,
+        level: data.level,
+      }))
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  }
 
   // Mock course completion and assignment success rate
   const courseCompletion = 80;
@@ -139,12 +192,12 @@ const UserDashboard = () => {
     { name: 'Not Started', value: 10 },
   ];
 
-  // Mock assignments data
-  const assignments = [
-    { id: 1, title: "Data Structures Assignment", course: "CS201", status: "Completed", dueDate: "2024-10-20", progress: 100 },
-    { id: 2, title: "Machine Learning Project", course: "CS301", status: "In Progress", dueDate: "2024-11-05", progress: 60 },
-    { id: 3, title: "Database Design", course: "CS202", status: "Not Started", dueDate: "2024-11-15", progress: 0 },
-  ];
+  // // Mock assignments data
+  // const assignments = [
+  //   { id: 1, title: "Data Structures Assignment", course: "CS201", status: "Completed", dueDate: "2024-10-20", progress: 100 },
+  //   { id: 2, title: "Machine Learning Project", course: "CS301", status: "In Progress", dueDate: "2024-11-05", progress: 60 },
+  //   { id: 3, title: "Database Design", course: "CS202", status: "Not Started", dueDate: "2024-11-15", progress: 0 },
+  // ];
 
   // Colors for the pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -373,23 +426,17 @@ const UserDashboard = () => {
                       </TableRow>
                     </StyledTableHead>
                     <TableBody>
-                      {assignments.map((assignment) => (
+                      {assign.map((assignment) => (
                         <TableRow key={assignment.id}>
-                          <TableCell>{assignment.title}</TableCell>
+                          <TableCell>{assignment.programme}</TableCell>
                           <TableCell>{assignment.course}</TableCell>
                           <TableCell>
                             <Chip
-                              label={assignment.status}
-                              color={
-                                assignment.status === 'Completed'
-                                  ? 'success'
-                                  : assignment.status === 'In Progress'
-                                  ? 'primary'
-                                  : 'warning'
-                              }
+                              label='Submitted'
+                              color='primary'
                             />
                           </TableCell>
-                          <TableCell>{assignment.dueDate}</TableCell>
+                          <TableCell>{new Date(assignment.deadline).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Box display="flex" alignItems="center">
                               <Box width="100%" mr={1}>

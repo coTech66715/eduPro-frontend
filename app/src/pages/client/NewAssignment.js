@@ -20,6 +20,8 @@ import {
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom';
+
 
 const Input = styled('input')({
   display: 'none',
@@ -35,6 +37,8 @@ const FileList = styled(List)(({ theme }) => ({
 }));
 
 const NewAssignment = ({ user }) => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -48,6 +52,7 @@ const NewAssignment = ({ user }) => {
   });
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [isAuth, setIsAuth] = useState(false)
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -69,12 +74,61 @@ const NewAssignment = ({ user }) => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async(event) => {
     event.preventDefault();
-    console.log('Form submitted:', formData);
-    setOpenSnackbar(true);
-    // Handle form submission logic here
+    
+    const data = new FormData();
+  data.append('name', formData.name);
+  data.append('email', formData.email);
+  data.append('studentId', formData.studentId);
+  data.append('phoneNumber', formData.phoneNumber);
+  data.append('programme', formData.programme);
+  data.append('course', formData.course);
+  data.append('deadline', formData.deadline);
+  data.append('description', formData.description);
+
+  formData.files.forEach(file => data.append('files', file));
+
+    try {
+      const token = localStorage.getItem('token')
+
+      if(!token) {
+        console.error('No auth token found');
+        setOpenSnackbar(true)
+        return
+      }
+      const response = await fetch('http://localhost:8080/api/assignments/submit', {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const result = await response.json();
+      if(response.ok){
+        console.log('Success:', result);
+        setOpenSnackbar(true); 
+        navigate(-1)
+      }else {
+        console.log('Error:', result);
+
+        if(response.status === 401) {
+          navigate('/')
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setOpenSnackbar(true)
+    }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
@@ -185,6 +239,7 @@ const NewAssignment = ({ user }) => {
                   <Input
                     accept="*/*"
                     id="contained-button-file"
+                    name='files'
                     multiple
                     type="file"
                     onChange={handleFileChange}
