@@ -191,7 +191,7 @@ const AllAssignments = () => {
         {[
           { text: 'Dashboard', icon: <TimelineIcon />, path: '/user-dashboard' },
           { text: 'All Assignments', icon: <AssignmentIcon />, path: '/assignments' },
-          { text: 'Payment History', icon: <AccountBalanceWalletIcon /> },
+          { text: 'Payment History', icon: <AccountBalanceWalletIcon />, path: '/payment-history' },
         ].map((item, index) => (
           <ListItem button key={item.text} onClick={() => navigate(item.path)}>
             <ListItemIcon>{item.icon}</ListItemIcon>

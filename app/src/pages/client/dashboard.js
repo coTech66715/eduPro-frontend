@@ -165,10 +165,10 @@ const UserDashboard = () => {
       throw new Error('No token found');
     }
 
-      const response = await fetch('http://localhost:8080/api/user/details', {
+      const response = await fetch('http://localhost:8080/api/auth/user/details', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       })
       if(!response.ok){
@@ -248,7 +248,7 @@ const UserDashboard = () => {
         {[
           { text: 'Dashboard', icon: <TimelineIcon />, path: '/user-dashboard' },
           { text: 'All Assignments', icon: <AssignmentIcon />, path: '/assignments' },
-          { text: 'Payment History', icon: <AccountBalanceWalletIcon />, path: '/payments' },
+          { text: 'Payment History', icon: <AccountBalanceWalletIcon />, path: '/payment-history' },
         ].map((item, index) => (
           <ListItem button key={item.text} onClick={() => navigate(item.path)}>
             <ListItemIcon>{item.icon}</ListItemIcon>
@@ -288,21 +288,23 @@ const UserDashboard = () => {
                 aria-label="open drawer"
                 edge="start"
                 onClick={handleDrawerToggle}
-                sx={{ mr: 2, display: { md: 'none' } }}
+                sx={{ mr: 2, display: { md: 'none' }, fontSize: '3rem' }}
               >
                 <MenuIcon />
               </IconButton>
             )}
             <Box>
-              <Typography variant="h4" color='blue' sx={{ fontWeight: 'bold' }}>
+              <Typography variant={isMobile ? 'h5' : 'h4'} color='blue' sx={{ fontWeight: isMobile ? '1.5rem' : '2.125rem'}}>
                 Welcome, {user.name}!
               </Typography>
-              <Typography variant="subtitle1" color="blue">
+              <Typography variant={isMobile ? 'body2' : 'subtitle1'} color="blue" sx={{
+                fontSize: isMobile ? '0.875rem' : '1rem'
+              }}>
                 {user.program} - Level {user.level}
               </Typography>
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ mt: isMobile ? 2 : 0}}>
             <IconButton>
               <Badge badgeContent={3} color="secondary">
                 <NotificationsIcon />

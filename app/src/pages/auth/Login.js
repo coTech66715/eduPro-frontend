@@ -9,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Get the navigate function
+  const navigate = useNavigate(); 
 
   const handleLogin = async (e) => {
     e.preventDefault();
