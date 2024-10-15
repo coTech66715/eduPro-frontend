@@ -6,6 +6,8 @@ import AdminDashboard from './pages/admin/dashboard';
 import UserDashboard from './pages/client/dashboard';
 import NewAssignment from './pages/client/NewAssignment';
 import AllAssignments from './pages/client/AllAssignments';
+import PaymentHistory from './pages/client/PaymentHistory';
+
 
 function App() {
   return (
@@ -18,6 +20,7 @@ function App() {
         <Route path='/user-dashboard' element={<UserDashboard />} />
         <Route path='/new-assignment' element={<NewAssignment /> }/>
         <Route path='/assignments' element={<AllAssignments /> } />
+        <Route path='payment-history' element={<PaymentHistory />}/>
       </Routes>
     </Router>
   );
