@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
   Typography,
@@ -16,7 +16,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
+  LinearProgress,
   Paper,
+  Drawer,
+  useMediaQuery,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HomeIcon from '@mui/icons-material/Home';
@@ -25,14 +29,15 @@ import PeopleIcon from '@mui/icons-material/People';
 import GroupIcon from '@mui/icons-material/Group';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { styled } from '@mui/material/styles';
+import MenuIcon from '@mui/icons-material/Menu';
+import { styled, useTheme } from '@mui/material/styles';
+import axios from 'axios';
 
 // Styled components
 const Sidebar = styled('div')(({ theme }) => ({
   width: '240px',
   height: '100vh',
   backgroundColor: '#f4f5f7',
-  position: 'fixed',
   paddingTop: '20px',
   display: 'flex',
   flexDirection: 'column',
@@ -56,13 +61,11 @@ const SidebarIcon = styled('span')(({ theme }) => ({
 }));
 
 const MainContent = styled('div')(({ theme }) => ({
-  marginLeft: '240px',
   padding: '20px',
   backgroundColor: '#ffffff',
   minHeight: '100vh',
-  [theme.breakpoints.down('sm')]: {
-    marginLeft: 0,
-    padding: '10px',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: '240px',
   },
 }));
 
@@ -94,57 +97,132 @@ const StatValue = styled(Typography)(({ theme }) => ({
 }));
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
-  backgroundColor: theme.palette.primary.main, // Blue background
+  backgroundColor: theme.palette.primary.main,
   '& .MuiTableCell-head': {
-    color: theme.palette.primary.contrastText, // Ensuring text is visible on blue background
+    color: theme.palette.primary.contrastText,
     fontWeight: 'bold',
   },
 }));
 
 const AdminDashboard = () => {
-  return (
-    <div>
-      {/* Sidebar */}
-      <Sidebar>
-        <Typography variant="h5" align="center" sx={{ padding: '16px', fontWeight: 'bold' }}>
-          Edu Pro
-        </Typography>
-        <List>
-          {[
-            { icon: <HomeIcon />, text: 'Home' },
-            { icon: <AssignmentIcon />, text: 'Assignments' },
-            { icon: <PeopleIcon />, text: 'User Management' },
-            { icon: <GroupIcon />, text: 'Groups' },
-            { icon: <VpnKeyIcon />, text: 'API Keys' },
-            { icon: <SettingsIcon />, text: 'Settings' },
-          ].map((item, index) => (
-            <React.Fragment key={item.text}>
-              <SidebarItem>
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
+
+      if (userRole !== 'admin') {
+        console.error('Access denied. Admin only.');
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await axios.get('http://localhost:8080/api/auth/users', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Error fetching users:', error.response ? error.response.data : error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const sidebarContent = (
+    <Sidebar>
+      <Typography variant="h5" align="center" sx={{ padding: '16px', fontWeight: 'bold', color: theme.palette.primary.main }}>
+        Edu Pro
+      </Typography>
+      <List>
+        {[
+          { icon: <HomeIcon />, text: 'Home' },
+          { icon: <AssignmentIcon />, text: 'Assignments' },
+          { icon: <PeopleIcon />, text: 'User Management' },
+          { icon: <GroupIcon />, text: 'Groups' },
+          { icon: <VpnKeyIcon />, text: 'API Keys' },
+          { icon: <SettingsIcon />, text: 'Settings' },
+        ].map((item, index) => (
+          <Tooltip key={item.text} title={item.text} placement="right">
+            <React.Fragment>
+              <SidebarItem onClick={isMobile ? handleDrawerToggle : undefined}>
                 <SidebarIcon>{item.icon}</SidebarIcon>
                 {item.text}
               </SidebarItem>
               {index !== 5 && <Divider />}
             </React.Fragment>
-          ))}
-        </List>
-      </Sidebar>
+          </Tooltip>
+        ))}
+      </List>
+    </Sidebar>
+  );
 
-      {/* Main Content */}
+  return (
+    <Box sx={{ display: 'flex' }}>
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      ) : (
+        <Drawer
+          variant="permanent"
+          sx={{
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          }}
+          open
+        >
+          {sidebarContent}
+        </Drawer>
+      )}
+
       <MainContent>
-        {/* Top Bar */}
         <TopBar>
-          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
             Dashboard
           </Typography>
-          <IconButton>
-            <Badge badgeContent={3} color="secondary">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+          <Tooltip title="Notifications">
+            <IconButton>
+              <Badge badgeContent={3} color="secondary">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
         </TopBar>
 
-        {/* Cards */}
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {[
             { title: 'Inbox', value: '24', color: '#4caf50' },
             { title: 'Total Users', value: '1,200', color: '#2196f3' },
@@ -162,40 +240,39 @@ const AdminDashboard = () => {
           ))}
         </Grid>
 
-        {/* User Management Section */}
         <Box mt={5}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
             User Management
           </Typography>
-          <TableContainer component={Paper}>
-            <Table>
-              <StyledTableHead>
-                <TableRow>
-                  <TableCell align="left">Name</TableCell>
-                  <TableCell align="left">Email</TableCell>
-                  <TableCell align="left">Role</TableCell>
-                  <TableCell align="left">Status</TableCell>
-                </TableRow>
-              </StyledTableHead>
-              <TableBody>
-                {[
-                  { name: 'John Doe', email: 'johndoe@example.com', role: 'User', status: 'Active' },
-                  { name: 'Jane Smith', email: 'janesmith@example.com', role: 'User', status: 'Inactive' },
-                  { name: 'Michael Brown', email: 'michaelbrown@example.com', role: 'User', status: 'Active' },
-                ].map((user) => (
-                  <TableRow key={user.email}>
-                    <TableCell align="left">{user.name}</TableCell>
-                    <TableCell align="left">{user.email}</TableCell>
-                    <TableCell align="left">{user.role}</TableCell>
-                    <TableCell align="left">{user.status}</TableCell>
+          {loading ? (
+            <LinearProgress />
+          ) : (
+            <TableContainer component={Paper} elevation={3}>
+              <Table>
+                <StyledTableHead>
+                  <TableRow>
+                    <TableCell align="left">Name</TableCell>
+                    <TableCell align="left">Email</TableCell>
+                    <TableCell align="left">Program</TableCell>
+                    <TableCell align="left">Level</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </StyledTableHead>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user._id} hover>
+                      <TableCell align='left'>{user.name}</TableCell>
+                      <TableCell align="left">{user.email}</TableCell>
+                      <TableCell align="left">{user.program}</TableCell>
+                      <TableCell align="left">{user.level}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Box>
       </MainContent>
-    </div>
+    </Box>
   );
 };
 
