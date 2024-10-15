@@ -7,6 +7,7 @@ import UserDashboard from './pages/client/dashboard';
 import NewAssignment from './pages/client/NewAssignment';
 import AllAssignments from './pages/client/AllAssignments';
 import PaymentHistory from './pages/client/PaymentHistory';
+import Assignments from './pages/admin/Assignments';
 
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
         <Route path='/user-dashboard' element={<UserDashboard />} />
         <Route path='/new-assignment' element={<NewAssignment /> }/>
         <Route path='/assignments' element={<AllAssignments /> } />
-        <Route path='payment-history' element={<PaymentHistory />}/>
+        <Route path='/payment-history' element={<PaymentHistory />}/>
+        <Route path='/get-assignments' element={<Assignments /> }/>
       </Routes>
     </Router>
   );

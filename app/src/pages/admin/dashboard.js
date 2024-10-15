@@ -21,7 +21,9 @@ import {
   Paper,
   Drawer,
   useMediaQuery,
+  Container,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HomeIcon from '@mui/icons-material/Home';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -60,12 +62,17 @@ const SidebarIcon = styled('span')(({ theme }) => ({
   color: '#888',
 }));
 
-const MainContent = styled('div')(({ theme }) => ({
-  padding: '20px',
-  backgroundColor: '#ffffff',
-  minHeight: '100vh',
+const MainContent = styled(Container)(({ theme }) => ({
+  flexGrow: 1,
+  padding: theme.spacing(3),
+  transition: theme.transitions.create('margin', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  marginLeft: 0,
   [theme.breakpoints.up('sm')]: {
     marginLeft: '240px',
+    width: `calc(100% - 240px)`,
   },
 }));
 
@@ -77,21 +84,24 @@ const TopBar = styled(Box)(({ theme }) => ({
 }));
 
 const StatCard = styled(Card)(({ theme, bgcolor }) => ({
-  margin: '10px 0',
-  padding: '16px',
-  borderRadius: '8px',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  padding: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius,
   color: '#fff',
-  textAlign: 'center',
   backgroundColor: bgcolor,
 }));
 
 const StatTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '16px',
+  fontSize: '18px',
   color: '#fff',
+  marginBottom: theme.spacing(1),
 }));
 
 const StatValue = styled(Typography)(({ theme }) => ({
-  fontSize: '28px',
+  fontSize: '32px',
   fontWeight: 'bold',
   color: '#fff',
 }));
@@ -110,9 +120,19 @@ const AdminDashboard = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userCount, setUserCount] = useState(0)
+
+  const navigate = useNavigate()
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem('token');
       const userRole = localStorage.getItem('userRole');
 
@@ -122,19 +142,23 @@ const AdminDashboard = () => {
       }
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:8080/api/auth/users', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setUsers(response.data);
+        const [usersResponse, countResponse] = await Promise.all([
+          axios.get('http://localhost:8080/api/auth/users', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:8080/api/auth/users/count', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        setUsers(usersResponse.data);
+        setUserCount(countResponse.data.count);
       } catch (error) {
-        console.error('Error fetching users:', error.response ? error.response.data : error.message);
+        console.error('Error fetching data:', error.response ? error.response.data : error.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchUsers();
+    fetchData();
   }, []);
 
   const handleDrawerToggle = () => {
@@ -148,8 +172,8 @@ const AdminDashboard = () => {
       </Typography>
       <List>
         {[
-          { icon: <HomeIcon />, text: 'Home' },
-          { icon: <AssignmentIcon />, text: 'Assignments' },
+          { icon: <HomeIcon />, text: 'Home', path: '/admin-dashboard'},
+          { icon: <AssignmentIcon />, text: 'Assignments', path: '/get-assignments' },
           { icon: <PeopleIcon />, text: 'User Management' },
           { icon: <GroupIcon />, text: 'Groups' },
           { icon: <VpnKeyIcon />, text: 'API Keys' },
@@ -157,7 +181,7 @@ const AdminDashboard = () => {
         ].map((item, index) => (
           <Tooltip key={item.text} title={item.text} placement="right">
             <React.Fragment>
-              <SidebarItem onClick={isMobile ? handleDrawerToggle : undefined}>
+              <SidebarItem onClick={() => handleNavigation(item.path)} >
                 <SidebarIcon>{item.icon}</SidebarIcon>
                 {item.text}
               </SidebarItem>
@@ -197,7 +221,7 @@ const AdminDashboard = () => {
         </Drawer>
       )}
 
-      <MainContent>
+      <MainContent maxWidth="xl">
         <TopBar>
           {isMobile && (
             <IconButton
@@ -225,22 +249,22 @@ const AdminDashboard = () => {
         <Grid container spacing={3}>
           {[
             { title: 'Inbox', value: '24', color: '#4caf50' },
-            { title: 'Total Users', value: '1,200', color: '#2196f3' },
+            { title: 'Total Users', value: userCount.toString(), color: '#2196f3' },
             { title: 'Completed Tasks', value: '350', color: '#ff9800' },
             { title: 'Pending Tasks', value: '45', color: '#f44336' },
           ].map((stat) => (
             <Grid item xs={12} sm={6} md={3} key={stat.title}>
               <StatCard bgcolor={stat.color}>
                 <CardContent>
-                  <StatTitle>{stat.title}</StatTitle>
-                  <StatValue>{stat.value}</StatValue>
+                  <StatTitle variant="h6">{stat.title}</StatTitle>
+                  <StatValue variant="h4">{stat.value}</StatValue>
                 </CardContent>
               </StatCard>
             </Grid>
           ))}
         </Grid>
 
-        <Box mt={5}>
+        <Box mt={10}>  
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
             User Management
           </Typography>
