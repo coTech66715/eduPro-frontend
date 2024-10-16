@@ -20,6 +20,7 @@ const Login = () => {
       
       // Save the token and user info in localStorage
       localStorage.setItem('token', data.token);
+      
       localStorage.setItem('userRole', data.role); // Store the user role
 
       // Redirect based on user role using navigate

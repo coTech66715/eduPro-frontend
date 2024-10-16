@@ -52,14 +52,20 @@ const Assignments = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      console.log('Token retrieved from localStorage:', token);
+
+      if (!token) {
+        throw new Error('No token found in localStorage');
+      }
       const response = await axios.get('http://localhost:8080/api/assignments/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('API Response:', response.data);
       setAssignments(response.data);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching assignments:', err);
-      setError('Failed to fetch assignments. Please try again later.');
+      setError(err.response?.data?.message || 'Failed to fetch assignments. Please try again later.');
       setLoading(false);
     }
   };
@@ -68,9 +74,25 @@ const Assignments = () => {
     setTabValue(newValue);
   };
 
-  const handleDownload = (assignmentId, fileName) => {
-    // Implement file download logic here
-    console.log(`Downloading file ${fileName} for assignment ${assignmentId}`);
+  const handleDownload = async(assignmentId, fileName) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`, {
+        headers: { Authorization: `Bearer ${token}`},
+        responseType: 'blob'
+      })
+
+      const blob = new Blob([response.data])
+
+      const link = document.createElement('a')
+      link.href = window.URL.createObjectURL(blob)
+      link.download = fileName;
+      link.click()
+
+      window.URL.revokeObjectURL(link.href)
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
   };
 
   const handleUploadClick = (assignment) => {
@@ -126,7 +148,14 @@ const Assignments = () => {
   };
 
   const renderAssignmentTable = (status) => {
-    const filteredAssignments = assignments.filter(ass => ass.status === status);
+    const filteredAssignments = assignments.filter(ass => {
+      if(status === 'pending') {
+        return !ass.status || ass.status === 'pending'
+      }
+      else {
+        return ass.status === status
+      }
+    });
 
     return (
       <TableContainer component={Paper} elevation={3}>
@@ -134,17 +163,18 @@ const Assignments = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>User</TableCell>
+              <TableCell>Email</TableCell>
               {!isSmallScreen && <TableCell>Course</TableCell>}
               <TableCell>Deadline</TableCell>
               <TableCell>Actions</TableCell>
+              
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredAssignments.map((assignment) => (
               <TableRow key={assignment._id}>
                 <TableCell>{assignment.name}</TableCell>
-                <TableCell>{assignment.userId.name}</TableCell>
+                <TableCell>{assignment.email}</TableCell>
                 {!isSmallScreen && <TableCell>{assignment.course}</TableCell>}
                 <TableCell>{format(new Date(assignment.deadline), 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
@@ -156,11 +186,13 @@ const Assignments = () => {
                         </IconButton>
                       </Tooltip>
                     )}
+                    { assignment.files && assignment.files.length > 0 && (
                     <Tooltip title="Download Files">
                       <IconButton onClick={() => handleDownload(assignment._id, assignment.files[0])} color="secondary">
                         <DownloadIcon />
                       </IconButton>
                     </Tooltip>
+                    )}
                   </Box>
                 </TableCell>
               </TableRow>
