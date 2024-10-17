@@ -42,6 +42,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DownloadIcon from '@mui/icons-material/Download';
+import PaymentIcon from '@mui/icons-material/Payment';
 import axios from 'axios'
 
 import { Link, useNavigate } from 'react-router-dom';
@@ -94,6 +95,20 @@ const SideDrawer = styled(Drawer)(({ theme }) => ({
     backgroundColor: theme.palette.background.default,
     borderRight: `1px solid ${theme.palette.divider}`,
   },
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2),
+}));
+
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  '& .MuiTableCell-head': {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '1rem'
+  }
 }));
 
 
@@ -187,6 +202,8 @@ const AllAssignments = () => {
     inProgress: assignments.filter(a => a.status === 'In Progress').length,
     pending: assignments.filter(a => a.status === 'Pending').length,
   };
+
+  
 
   const chartData = [
     { name: 'Completed', value: stats.completed, color: theme.palette.success.main },
@@ -364,34 +381,67 @@ const AllAssignments = () => {
         {/* Assignments Table */}
         {Object.entries(groupedAssignments).map(([status, assignments]) => (
           <Box key={status} sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" color='primary' gutterBottom>
               {status} ({assignments.length})
             </Typography>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ 
+                boxShadow: 3,
+                borderRadius: 2,
+                overflow: 'hidden'
+              }}>
               <Table>
-                <TableHead>
+                <StyledTableHead>
                   <TableRow>
-                    <TableCell>Course</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Deadline</TableCell>
-                    {status === 'Completed' && <TableCell>Fee</TableCell>}
-                    {status === 'Completed' && <TableCell>Download</TableCell>}
+                    <StyledTableCell>Course</StyledTableCell>
+                    <StyledTableCell>Deadline</StyledTableCell>
+                    {status === 'Completed' && <StyledTableCell>Fee</StyledTableCell>}
+                    {status === 'Completed' && <StyledTableCell>Download</StyledTableCell>}
+                    {status === 'Completed' && <StyledTableCell>Payment</StyledTableCell>}
+                    {(status === 'In Progress' || status === 'Pending') && <StyledTableCell>Progress</StyledTableCell>}
                   </TableRow>
-                </TableHead>
+                </StyledTableHead>
                 <TableBody>
                   {assignments.map((assignment) => (
-                    <TableRow key={assignment._id}>
+                    <TableRow key={assignment._id} sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}>
                       <TableCell>{assignment.course}</TableCell>
-                      <TableCell>{assignment.description}</TableCell>
                       <TableCell>{new Date(assignment.deadline).toLocaleDateString()}</TableCell>
                       {status === 'Completed' && (
-                        <TableCell>{assignment.fee ? `GHS ${assignment.fee.toFixed(2)}` : 'N/A'}</TableCell>
+                        <>
+                          <TableCell>{assignment.fee ? `GHS ${assignment.fee.toFixed(2)}` : 'N/A'}</TableCell>
+                          <TableCell>
+                            <IconButton >
+                              <DownloadIcon />
+                            </IconButton>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton>
+                              <PaymentIcon />
+                            </IconButton>
+                          </TableCell>
+                        </>
                       )}
-                      {status === 'Completed' && (
+                      {status === 'In Progress' && (
                         <TableCell>
-                          <IconButton>
-                            <DownloadIcon />
-                          </IconButton>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ width: '100%', mr: 1 }}>
+                              <LinearProgress variant="determinate" value={60} />
+                            </Box>
+                            <Box sx={{ minWidth: 35 }}>
+                              <Typography variant="body2" color="text.secondary">60%</Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                      )}
+                      {status === 'Pending' && (
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ width: '100%', mr: 1 }}>
+                              <LinearProgress variant="determinate" value={30} />
+                            </Box>
+                            <Box sx={{ minWidth: 35 }}>
+                              <Typography variant="body2" color="text.secondary">30%</Typography>
+                            </Box>
+                          </Box>
                         </TableCell>
                       )}
                     </TableRow>
