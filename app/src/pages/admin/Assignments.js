@@ -154,7 +154,12 @@ const Assignments = () => {
         { paymentStatus: status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      await fetchAssignments();
+      
+      setAssignments(prevAssignments =>
+        prevAssignments.map(assignment => 
+          assignment._id === assignmentId ? { ...assignment, paymentStatus: status} : assignment
+        )
+      )
       setSnackbar({
         open: true,
         message: `Assignment marked as ${status}`,
@@ -383,6 +388,8 @@ const Assignments = () => {
         });
       }
     };
+
+
     
 
     return (
@@ -495,7 +502,7 @@ const Assignments = () => {
                             <ViewFilesIcon />
                           </IconButton>
                         </Tooltip>
-                        <TableCell>${assignment.fee || 'N/A'}</TableCell>
+                        <TableCell>GHS {assignment.fee || 'N/A'}</TableCell>
                       </>
                     )}
                 </Box>

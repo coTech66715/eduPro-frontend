@@ -41,6 +41,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DownloadIcon from '@mui/icons-material/Download';
+import axios from 'axios'
 
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -104,51 +106,74 @@ const AllAssignments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const [completedAssignments, setCompletedAssignments] = useState([]);
   const navigate = useNavigate();
 
-  // Mock user data
-  const user = {
-    name: "John Doe",
-    email: "johndoe@example.com",
-    avatar: "/api/placeholder/100/100",
-    program: "Computer Science",
-    level: "300",
+  useEffect(() => {
+    fetchAllAssignments();
+  }, []);
+
+  const fetchAllAssignments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8080/api/assignments/all', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const mappedAssignments = response.data.map(assignment => ({
+        ...assignment,
+        status: mapStatus(assignment.status)
+      }))
+
+      setAssignments(mappedAssignments);
+      setFilteredAssignments(mappedAssignments);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
+  };
+
+  const mapStatus = (backendStatus) => {
+    const statusMap = {
+      'pending': 'Pending',
+      'in_progress': 'In Progress',
+      'submitted': 'Completed'
+    };
+    return statusMap[backendStatus] || backendStatus;
   };
 
   useEffect(() => {
-    const mockAssignments = [
-      { id: 1, title: 'Math Problem Set', course: 'MATH301', status: 'Completed', dueDate: '2024-10-15', progress: 100 },
-      { id: 2, title: 'Programming Project', course: 'CS305', status: 'In Progress', dueDate: '2024-10-20', progress: 60 },
-      { id: 3, title: 'Database Design', course: 'CS310', status: 'Pending', dueDate: '2024-10-25', progress: 0 },
-      { id: 4, title: 'Physics Lab Report', course: 'PHYS202', status: 'Completed', dueDate: '2024-10-18', progress: 100 },
-      { id: 5, title: 'Literature Essay', course: 'ENG205', status: 'In Progress', dueDate: '2024-10-22', progress: 75 },
-      { id: 6, title: 'History Research Paper', course: 'HIST301', status: 'Pending', dueDate: '2024-10-30', progress: 0 },
-    ];
-    setAssignments(mockAssignments);
-    setFilteredAssignments(mockAssignments);
+    fetchUserDetails();
+    fetchAllAssignments();
   }, []);
+
+  const fetchUserDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8080/api/auth/user/details', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
+  
+
+
 
   useEffect(() => {
     const filtered = assignments.filter(assignment => 
       (statusFilter === 'All' || assignment.status === statusFilter) &&
-      (assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       assignment.course.toLowerCase().includes(searchTerm.toLowerCase()))
+      (assignment.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       assignment.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredAssignments(filtered);
   }, [searchTerm, statusFilter, assignments]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Completed':
-        return theme.palette.success.main;
-      case 'In Progress':
-        return theme.palette.primary.main;
-      case 'Pending':
-        return theme.palette.warning.main;
-      default:
-        return theme.palette.grey[500];
-    }
-  };
+  
 
   const groupedAssignments = {
     Completed: filteredAssignments.filter(a => a.status === 'Completed'),
@@ -176,17 +201,22 @@ const AllAssignments = () => {
   
   const drawer = (
     <div>
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Avatar src={user.avatar} sx={{ width: 60, height: 60, mr: 2 }} />
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            {user.name}
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            {user.program}
-          </Typography>
+      {user && (
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Avatar 
+            sx={{ width: 60, height: 60, mr: 2 }}
+            {...(user.name ? { children: user.name.charAt(0) } : {})}
+          />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {user.name}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {user.program} - Level {user.level}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
+      )}
       <List>
         {[
           { text: 'Dashboard', icon: <TimelineIcon />, path: '/user-dashboard' },
@@ -341,42 +371,29 @@ const AllAssignments = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Title</TableCell>
                     <TableCell>Course</TableCell>
-                    <TableCell>Due Date</TableCell>
-                    <TableCell>Progress</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>Deadline</TableCell>
+                    {status === 'Completed' && <TableCell>Fee</TableCell>}
+                    {status === 'Completed' && <TableCell>Download</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {assignments.map((assignment) => (
-                    <TableRow key={assignment.id}>
-                      <TableCell>{assignment.title}</TableCell>
+                    <TableRow key={assignment._id}>
                       <TableCell>{assignment.course}</TableCell>
-                      <TableCell>{assignment.dueDate}</TableCell>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Box width="100%" mr={1}>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={assignment.progress} 
-                              sx={{ 
-                                height: 10, 
-                                borderRadius: 5,
-                                backgroundColor: theme.palette.grey[200],
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 5,
-                                  backgroundColor: getStatusColor(assignment.status),
-                                },
-                              }}
-                            />
-                          </Box>
-                          <Box minWidth={35}>
-                            <Typography variant="body2" color="textSecondary">
-                              {`${assignment.progress}%`}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
+                      <TableCell>{assignment.description}</TableCell>
+                      <TableCell>{new Date(assignment.deadline).toLocaleDateString()}</TableCell>
+                      {status === 'Completed' && (
+                        <TableCell>{assignment.fee ? `GHS ${assignment.fee.toFixed(2)}` : 'N/A'}</TableCell>
+                      )}
+                      {status === 'Completed' && (
+                        <TableCell>
+                          <IconButton>
+                            <DownloadIcon />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
