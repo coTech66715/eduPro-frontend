@@ -52,7 +52,7 @@ const NewAssignment = ({ user }) => {
   });
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [isAuth, setIsAuth] = useState(false)
+  
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
