@@ -35,7 +35,9 @@ import {
   Alert,
   Rating,
   Snackbar,
-  InputAdornment
+  InputAdornment, 
+  ListItemText
+ 
 } from '@mui/material';
 import {
   CloudDownload as DownloadIcon,
@@ -50,7 +52,9 @@ import {
   Notifications as NotificationsIcon,
   Description as DescriptionIcon,
   PlayArrow as InProgressIcon,
-  
+  AttachMoney as PaidIcon,
+  MoneyOff as UnpaidIcon,
+  Visibility as ViewFilesIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import axios from 'axios';
@@ -138,11 +142,54 @@ const Assignments = () => {
     files: null
   });
 
+  const [viewFilesDialog, setViewFilesDialog] = useState({
+    open: false,
+    files: [],
+  });
+
+  const handlePaymentStatus = async (assignmentId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`http://localhost:8080/api/assignments/${assignmentId}/payment-status`, 
+        { paymentStatus: status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await fetchAssignments();
+      setSnackbar({
+        open: true,
+        message: `Assignment marked as ${status}`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to update payment status',
+        severity: 'error'
+      });
+    }
+  };
+
+  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  
+  const handleViewFiles = (files) => {
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'No files available for this assignment',
+        severity: 'info'
+      });
+      return;
+    }
+    setViewFilesDialog({
+      open: true,
+      files: files,
+    });
+  };
 
   useEffect(() => {
     fetchAssignments();
@@ -350,8 +397,7 @@ const Assignments = () => {
               <TableCell>Deadline</TableCell>
               <TableCell align='center'>Description</TableCell>
               <TableCell>Actions</TableCell>
-              {status === 'submitted' && <TableCell>Feedback</TableCell>}
-              {status === 'submitted' && <TableCell>Fee</TableCell>}
+              
             </TableRow>
           </TableHead>
           <TableBody>
@@ -424,11 +470,34 @@ const Assignments = () => {
                     </>
                   )}
                   {status === 'submitted' && (
-                    <>
-                      <TableCell>{assignment.feedback}</TableCell>
-                      <TableCell>${assignment.fee}</TableCell>
-                    </>
-                  )}
+                      <>
+                        <Tooltip title="Mark as Paid">
+                          <IconButton
+                            onClick={() => handlePaymentStatus(assignment._id, 'paid')}
+                            color="success"
+                          >
+                            <PaidIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Mark as Unpaid">
+                          <IconButton
+                            onClick={() => handlePaymentStatus(assignment._id, 'unpaid')}
+                            color="error"
+                          >
+                            <UnpaidIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="View Uploaded Files">
+                          <IconButton
+                            onClick={() => handleViewFiles(assignment.completedFiles)}
+                            color="primary"
+                          >
+                            <ViewFilesIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <TableCell>${assignment.fee || 'N/A'}</TableCell>
+                      </>
+                    )}
                 </Box>
               </TableCell>
               </TableRow>
@@ -670,7 +739,7 @@ const Assignments = () => {
             value={completionForm.fee}
             onChange={(e) => setCompletionForm(prev => ({ ...prev, fee: e.target.value }))}
             InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              startAdornment: <InputAdornment position="start">GHS</InputAdornment>,
             }}
           />
           <TextField
@@ -704,6 +773,39 @@ const Assignments = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Dialog 
+        open={viewFilesDialog.open} 
+        onClose={() => setViewFilesDialog({ open: false, files: [] })}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Uploaded Files</DialogTitle>
+        <DialogContent>
+          {viewFilesDialog.files && viewFilesDialog.files.length > 0 ? (
+            <List>
+              {viewFilesDialog.files.map((file, index) => (
+                <ListItem key={index}>
+                  <ListItemText 
+                    primary={file.name} 
+                    secondary={`Size: ${file.size ? `${file.size} bytes` : 'Unknown'}`} 
+                  />
+                  <IconButton onClick={() => handleDownload(file.id, file.name)}>
+                    <DownloadIcon />
+                  </IconButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography>No files available.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewFilesDialog({ open: false, files: [] })}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </Box>
   );
