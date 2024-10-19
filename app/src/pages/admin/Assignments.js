@@ -182,19 +182,27 @@ const Assignments = () => {
   const navigate = useNavigate();
 
   const handleViewFiles = (files) => {
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      setSnackbar({
-        open: true,
-        message: 'No files available for this assignment',
-        severity: 'info'
-      });
-      return;
+    if (!files || files.length === 0) {
+        setSnackbar({
+            open: true,
+            message: 'No files available for this assignment',
+            severity: 'info'
+        });
+        return;
     }
+    
+    
+    const formattedFiles = files.map(file => ({
+        name: file.originalName || file.name,
+        size: file.size,
+        id: file.name, 
+    }));
+    
     setViewFilesDialog({
-      open: true,
-      files: files,
+        open: true,
+        files: formattedFiles,
     });
-  };
+};
 
   useEffect(() => {
     fetchAssignments();
@@ -228,24 +236,33 @@ const Assignments = () => {
 
   const handleDownload = async(assignmentId, fileName) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`, {
-        headers: { Authorization: `Bearer ${token}`},
-        responseType: 'blob'
-      })
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+            `http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`,
+            {
+                headers: { Authorization: `Bearer ${token}`},
+                responseType: 'blob'
+            }
+        );
 
-      const blob = new Blob([response.data])
-
-      const link = document.createElement('a')
-      link.href = window.URL.createObjectURL(blob)
-      link.download = fileName;
-      link.click()
-
-      window.URL.revokeObjectURL(link.href)
+        const blob = new Blob([response.data]);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading file:', error);
+        console.error('Error downloading file:', error);
+        setSnackbar({
+            open: true,
+            message: 'Failed to download file',
+            severity: 'error'
+        });
     }
-  };
+};
 
   const handleUploadClick = (assignment) => {
     setSelectedAssignment(assignment);
@@ -572,47 +589,45 @@ const Assignments = () => {
 
     const handleCompletionSubmit = async () => {
       try {
-        const formData = new FormData();
-        formData.append('feedback', completionForm.feedback);
-        formData.append('fee', completionForm.fee);
-        if (completionForm.files) {
-          formData.append('files', completionForm.files);
-        }
-    
-        console.log('Form data:', Object.fromEntries(formData));
-    
-        const token = localStorage.getItem('token');
-        const response = await axios.patch(
-          `http://localhost:8080/api/assignments/${completionDialog.assignment._id}/complete`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data'
-            }
+          const formData = new FormData();
+          formData.append('feedback', completionForm.feedback);
+          formData.append('fee', completionForm.fee);
+          
+          // Handle file upload
+          if (completionForm.files) {
+              formData.append('files', completionForm.files);
           }
-        );
-    
-        console.log('Server response:', response.data);
-    
-        await fetchAssignments();
-        setCompletionDialog({ open: false, assignment: null });
-        setCompletionForm({ feedback: '', fee: '', files: null });
-        setSnackbar({
-          open: true,
-          message: 'Assignment marked as completed',
-          severity: 'success'
-        });
-      } catch (error) {
-        console.error('Error completing assignment:', error.response ? error.response.data : error.message);
-        setSnackbar({
-          open: true,
-          message: 'Failed to complete assignment: ' + (error.response ? error.response.data.message : error.message),
-          severity: 'error'
-        });
-      }
-    };
   
+          const token = localStorage.getItem('token');
+          const response = await axios.patch(
+              `http://localhost:8080/api/assignments/${completionDialog.assignment._id}/complete`,
+              formData,
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                      'Content-Type': 'multipart/form-data'
+                  }
+              }
+          );
+  
+          // Update the UI with the new files
+          await fetchAssignments();
+          setCompletionDialog({ open: false, assignment: null });
+          setCompletionForm({ feedback: '', fee: '', files: null });
+          setSnackbar({
+              open: true,
+              message: 'Assignment marked as completed',
+              severity: 'success'
+          });
+      } catch (error) {
+          console.error('Error completing assignment:', error);
+          setSnackbar({
+              open: true,
+              message: 'Failed to complete assignment',
+              severity: 'error'
+          });
+      }
+  };
   return (
     <Box sx={{ display: 'flex' }}>
       {isMobile ? (
