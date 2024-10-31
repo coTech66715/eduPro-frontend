@@ -236,33 +236,24 @@ const Assignments = () => {
 
   const handleDownload = async(assignmentId, fileName) => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(
-            `http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`,
-            {
-                headers: { Authorization: `Bearer ${token}`},
-                responseType: 'blob'
-            }
-        );
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`, {
+        headers: { Authorization: `Bearer ${token}`},
+        responseType: 'blob'
+      })
 
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      const blob = new Blob([response.data])
+
+      const link = document.createElement('a')
+      link.href = window.URL.createObjectURL(blob)
+      link.download = fileName;
+      link.click()
+
+      window.URL.revokeObjectURL(link.href)
     } catch (error) {
-        console.error('Error downloading file:', error);
-        setSnackbar({
-            open: true,
-            message: 'Failed to download file',
-            severity: 'error'
-        });
+      console.error('Error downloading file:', error);
     }
-};
+  };
 
   const handleUploadClick = (assignment) => {
     setSelectedAssignment(assignment);

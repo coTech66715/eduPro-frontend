@@ -455,7 +455,7 @@ const UserDashboard = () => {
                           <TableCell>
                             <Chip
                               label='Submitted'
-                              color='primary'
+                              color='secondary'
                             />
                           </TableCell>
                           <TableCell>{new Date(assignment.deadline).toLocaleDateString()}</TableCell>
