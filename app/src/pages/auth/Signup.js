@@ -20,7 +20,8 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/signup', formData);
+      const response = await axios.post('https://edupro-backend.onrender.com/api/auth/signup', formData);
+
       console.log(response.data);
       navigate('/login');
     } catch (error) {

@@ -143,10 +143,10 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         const [usersResponse, countResponse] = await Promise.all([
-          axios.get('http://localhost:8080/api/auth/users', {
+          axios.get('https://edupro-backend.onrender.com/api/auth/users', {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:8080/api/auth/users/count', {
+          axios.get('https://edupro-backend.onrender.com/api/auth/users/count', {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);

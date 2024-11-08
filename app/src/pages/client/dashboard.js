@@ -140,7 +140,7 @@ const UserDashboard = () => {
   const fetchRecentAssignments = async() => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8080/api/assignments/recent', {
+      const response = await fetch('https://edupro-backend.onrender.com/api/assignments/recent', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -165,7 +165,7 @@ const UserDashboard = () => {
       throw new Error('No token found');
     }
 
-      const response = await fetch('http://localhost:8080/api/auth/user/details', {
+      const response = await fetch('https://edupro-backend.onrender.com/api/auth/user/details', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -218,7 +218,7 @@ const UserDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token')
 
-    fetch('http://localhost:8080/api/logout', {
+    fetch('https://edupro-backend.onrender.com/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}` 

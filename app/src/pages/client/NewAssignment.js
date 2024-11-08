@@ -97,7 +97,7 @@ const NewAssignment = ({ user }) => {
         setOpenSnackbar(true)
         return
       }
-      const response = await fetch('http://localhost:8080/api/assignments/submit', {
+      const response = await fetch('https://edupro-backend.onrender.com/api/assignments/submit', {
         method: 'POST',
         body: data,
         headers: {

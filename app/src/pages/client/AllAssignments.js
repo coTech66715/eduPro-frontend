@@ -133,7 +133,7 @@ const AllAssignments = () => {
   const fetchAllAssignments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8080/api/assignments/all', {
+      const response = await axios.get('https://edupro-backend.onrender.com/api/assignments/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -166,7 +166,7 @@ const AllAssignments = () => {
   const fetchUserDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8080/api/auth/user/details', {
+      const response = await axios.get('https://edupro-backend.onrender.com/api/auth/user/details', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);

@@ -16,8 +16,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:8080/api/auth/login', { username, password });
-      
+      const { data } = await axios.post('https://edupro-backend.onrender.com/api/auth/login', { username, password });
+
+
       // Save the token and user info in localStorage
       localStorage.setItem('token', data.token);
       

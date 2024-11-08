@@ -150,7 +150,8 @@ const Assignments = () => {
   const handlePaymentStatus = async (assignmentId, status) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:8080/api/assignments/${assignmentId}/payment-status`, 
+      await axios.patch(`https://edupro-backend.onrender.com/api/assignments/${assignmentId}/payment-status`, 
+
         { paymentStatus: status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -217,7 +218,7 @@ const Assignments = () => {
       if (!token) {
         throw new Error('No token found in localStorage');
       }
-      const response = await axios.get('http://localhost:8080/api/assignments/all', {
+      const response = await axios.get('https://edupro-backend.onrender.com/api/assignments/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('API Response:', response.data);
@@ -237,7 +238,7 @@ const Assignments = () => {
   const handleDownload = async(assignmentId, fileName) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get(`http://localhost:8080/api/assignments/download/${assignmentId}/${fileName}`, {
+      const response = await axios.get(`https://edupro-backend.onrender.com/api/assignments/download/${assignmentId}/${fileName}`, {
         headers: { Authorization: `Bearer ${token}`},
         responseType: 'blob'
       })
@@ -288,7 +289,7 @@ const Assignments = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:8080/api/assignments/submit`, formData, {
+      await axios.post(`https://edupro-backend.onrender.com/api/assignments/submit`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
@@ -337,8 +338,7 @@ const Assignments = () => {
     const handleStatusChange = async(assignmentId, newStatus) => {
       try {
         const token = localStorage.getItem('token')
-
-        await axios.patch(`http://localhost:8080/api/assignments/${assignmentId}/status`, {status: newStatus}, {
+        await axios.patch(`https://edupro-backend.onrender.com/api/assignments/${assignmentId}/status`, {status: newStatus}, {
           headers: { Authorization: `Bearer ${token}`}
         })
 
@@ -369,7 +369,7 @@ const Assignments = () => {
   
         const token = localStorage.getItem('token');
         await axios.patch(
-          `http://localhost:8080/api/assignments/${completionDialog.assignment._id}/complete`,
+          `https://edupro-backend.onrender.com/api/assignments/${completionDialog.assignment._id}/complete`,
           formData,
           {
             headers: {
