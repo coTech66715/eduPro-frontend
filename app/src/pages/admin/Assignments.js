@@ -211,25 +211,29 @@ const Assignments = () => {
 
   const fetchAssignments = async () => {
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      console.log('Token retrieved from localStorage:', token);
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('token');
+        console.log('Token retrieved from localStorage:', token);
 
-      if (!token) {
-        throw new Error('No token found in localStorage');
-      }
-      const response = await axios.get('https://edupro-backend.onrender.com/api/assignments/all', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('API Response:', response.data);
-      setAssignments(response.data);
-      setLoading(false);
+        if (!token) {
+            throw new Error('No token found in localStorage');
+        }
+
+        const response = await axios.get('https://edupro-backend.onrender.com/api/assignments/all', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        console.log('API Response:', response.data);
+        setAssignments(response.data);
+
     } catch (err) {
-      console.error('Error fetching assignments:', err);
-      setError(err.response?.data?.message || 'Failed to fetch assignments. Please try again later.');
-      setLoading(false);
+        console.error('Error fetching assignments:', err);
+        setError(err.response?.data?.message || 'Failed to fetch assignments. Please try again later.');
+    } finally {
+        setLoading(false);
     }
-  };
+};
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
