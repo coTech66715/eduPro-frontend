@@ -235,26 +235,68 @@ const Assignments = () => {
     setTabValue(newValue);
   };
 
-  const handleDownload = async(assignmentId, fileName) => {
+  const handleDownload = async (assignmentId, fileName) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`https://edupro-backend.onrender.com/api/assignments/download/${assignmentId}/${fileName}`, {
-        headers: { Authorization: `Bearer ${token}`},
-        responseType: 'blob'
-      })
+        // Validate inputs
+        if (!assignmentId || !fileName) {
+            throw new Error('Missing assignment ID or filename');
+        }
 
-      const blob = new Blob([response.data])
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
 
-      const link = document.createElement('a')
-      link.href = window.URL.createObjectURL(blob)
-      link.download = fileName;
-      link.click()
+        const response = await axios.get(
+            `https://edupro-backend.onrender.com/api/assignments/download/${assignmentId}/${fileName}`,
+            {
+                headers: { 
+                    Authorization: `Bearer ${token}`
+                },
+                responseType: 'blob'
+            }
+        );
 
-      window.URL.revokeObjectURL(link.href)
+        // Create blob with proper type from response
+        const blob = new Blob([response.data], {
+            type: response.headers['content-type'] || 'application/octet-stream'
+        });
+
+        // Create and click download link
+        const link = document.createElement('a');
+        const url = window.URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);  // Required for Firefox
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
     } catch (error) {
-      console.error('Error downloading file:', error);
+        console.error('Error downloading file:', error);
+        if (error.response) {
+            switch (error.response.status) {
+                case 404:
+                    alert('File not found. Please ensure the file exists.');
+                    break;
+                case 401:
+                    alert('Authentication required. Please log in again.');
+                    break;
+                case 500:
+                    alert('Server error. Please try again later.');
+                    break;
+                default:
+                    alert(`Error downloading file: ${error.response.data.message || 'Unknown error'}`);
+            }
+        } else if (error.request) {
+            alert('Network error. Please check your connection.');
+        } else {
+            alert(error.message);
+        }
     }
-  };
+};
 
   const handleUploadClick = (assignment) => {
     setSelectedAssignment(assignment);
